@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SpotMe — مساعد الكشافة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch: #0b1210;
+    --pitch-2: #10241d;
+    --chalk: #ede9e0;
+    --chalk-dim: #b9c2ba;
+    --floodlight: #f2b705;
+    --floodlight-dim: #a37f10;
+    --line: #23372f;
+    --alert: #c1432a;
+    --card: #11201a;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(242,183,5,0.08), transparent 60%),
+      linear-gradient(180deg, var(--pitch) 0%, var(--pitch-2) 100%);
+    color:var(--chalk);
+    font-family:'Cairo', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  header{
+    border-bottom:1px solid var(--line);
+    padding:14px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    background:rgba(0,0,0,0.15);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:34px;height:34px;
+    border-radius:6px;
+    background:var(--floodlight);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--pitch);
+    font-family:'Teko',sans-serif;
+    font-weight:600;
+    font-size:20px;
+    box-shadow:0 0 22px rgba(242,183,5,0.35);
+  }
+  .brand-text h1{ font-size:18px; margin:0; font-weight:800; letter-spacing:.2px; }
+  .brand-text span{
+    font-family:'Teko', sans-serif;
+    font-size:12px;
+    letter-spacing:2px;
+    color:var(--chalk-dim);
+    text-transform:uppercase;
+  }
+  .scoreboard{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .stat{ padding:6px 16px; text-align:center; border-left:1px solid var(--line); min-width:88px; }
+  .stat:last-child{border-left:none;}
+  .stat b{
+    display:block;
+    font-family:'Teko', sans-serif;
+    font-size:24px;
+    font-weight:600;
+    color:var(--floodlight);
+    line-height:1;
+  }
+  .stat small{
+    font-size:10px; color:var(--chalk-dim); letter-spacing:1px; text-transform:uppercase;
+  }
+
+  main{
+    flex:1;
+    max-width:760px;
+    width:100%;
+    margin:0 auto;
+    padding:24px 18px 140px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .intro{
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:18px;
+    color:var(--chalk-dim);
+    font-size:14px;
+    line-height:1.9;
+  }
+  .intro b{color:var(--chalk);}
+
+  .chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .chip{
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--chalk);
+    padding:6px 14px;
+    border-radius:20px;
+    font-family:'Cairo',sans-serif;
+    font-size:13px;
+    cursor:pointer;
+    transition:.15s ease;
+  }
+  .chip:hover{ border-color:var(--floodlight-dim); color:var(--floodlight); }
+
+  .msg{
+    max-width:85%;
+    padding:14px 16px;
+    border-radius:4px 14px 14px 14px;
+    line-height:1.85;
+    font-size:15px;
+    position:relative;
+    animation:rise .25s ease;
+  }
+  @keyframes rise{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .msg.user{
+    align-self:flex-end;
+    background:var(--floodlight);
+    color:#171205;
+    border-radius:14px 4px 14px 14px;
+    font-weight:600;
+  }
+  .msg.bot{
+    align-self:flex-start;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-right:3px solid var(--floodlight);
+    white-space:pre-wrap;
+  }
+  .msg.bot.thinking{ color:var(--chalk-dim); font-style:italic; }
+  .msg.error{
+    align-self:flex-start;
+    background:rgba(193,67,42,0.12);
+    border:1px solid var(--alert);
+    border-right:3px solid var(--alert);
+    color:#f0c3ba;
+  }
+
+  .sources{ margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; }
+  .source-tag{
+    font-family:'Teko', sans-serif;
+    font-size:12px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    padding:2px 9px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    color:var(--chalk-dim);
+  }
+
+  .composer{
+    position:fixed;
+    bottom:0; left:0; right:0;
+    background:linear-gradient(0deg, var(--pitch) 60%, rgba(11,18,16,0));
+    padding:22px 18px 20px;
+  }
+  .composer-inner{
+    max-width:760px;
+    margin:0 auto;
+    display:flex;
+    gap:10px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:8px 8px 8px 14px;
+  }
+  .composer-inner input{
+    flex:1; background:transparent; border:none; outline:none;
+    color:var(--chalk); font-family:'Cairo',sans-serif; font-size:15px; padding:8px 0;
+  }
+  .composer-inner input::placeholder{color:#5a675f;}
+  .send-btn{
+    background:var(--floodlight); color:#171205; border:none;
+    border-radius:8px; padding:0 20px;
+    font-family:'Cairo',sans-serif; font-weight:700; font-size:14px;
+    cursor:pointer; transition:.15s ease;
+  }
+  .send-btn:hover{filter:brightness(1.08);}
+  .send-btn:disabled{opacity:.5; cursor:default;}
+  .reset-btn{
+    background:transparent; border:1px solid var(--line); color:var(--chalk-dim);
+    border-radius:8px; padding:0 14px; font-family:'Cairo',sans-serif; font-size:13px; cursor:pointer;
+  }
+  .reset-btn:hover{ color:var(--alert); border-color:var(--alert); }
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+
+  @media (max-width:520px){
+    .scoreboard{display:none;}
+    .msg{max-width:92%;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">S</div>
+    <div class="brand-text">
+      <h1>SpotMe</h1>
+      <span>مساعد الكشافة الذكي</span>
+    </div>
+  </div>
+  <div class="scoreboard" id="scoreboard">
+    <div class="stat"><b id="stat-players">—</b><small>لاعب</small></div>
+    <div class="stat"><b>4</b><small>رياضات</small></div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="intro" id="intro">
+    اسأل عن أي لاعب في قاعدة <b>SpotMe</b> — كرة قدم، سلة، يد، أو طائرة.
+    جرب تسأل عن لاعب بالاسم، أو ترشيح، أو مقارنة بين لاعبين.
+    <div class="chips">
+      <button class="chip" data-q="رشحلي أفضل لاعب كرة قدم">أفضل لاعب كورة</button>
+      <button class="chip" data-q="لاعبين كرة سلة سريعين ومتعافيين من الإصابات">لاعبين سلة أصحاء</button>
+      <button class="chip" data-q="احكيلي عن أفضل لاعب كرة يد في القاعدة">أفضل لاعب يد</button>
+      <button class="chip" data-q="مين أحسن لاعب كرة طائرة موجود؟">أفضل لاعب طائرة</button>
+    </div>
+  </div>
+  <div id="messages" style="display:flex; flex-direction:column; gap:14px;"></div>
+</main>
+
+<div class="composer">
+  <div class="composer-inner">
+    <button class="reset-btn" id="resetBtn" title="محادثة جديدة">محادثة جديدة</button>
+    <input id="box" placeholder="اسأل عن لاعب، رياضة، أو مقارنة..." autocomplete="off" />
+    <button class="send-btn" id="sendBtn">إرسال</button>
+  </div>
+</div>
+
+<script>
+let sessionId = null;
+
+const messagesEl = document.getElementById('messages');
+const box = document.getElementById('box');
+const sendBtn = document.getElementById('sendBtn');
+const resetBtn = document.getElementById('resetBtn');
+const intro = document.getElementById('intro');
+
+async function loadHealth() {
+  try {
+    const res = await fetch('/api/health');
+    const data = await res.json();
+    document.getElementById('stat-players').textContent = data.players_in_store ?? '—';
+  } catch (e) { /* silent */ }
+}
+loadHealth();
+
+function appendMsg(text, cls) {
+  intro.style.display = 'none';
+  const div = document.createElement('div');
+  div.className = 'msg ' + cls;
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  return div;
+}
+
+function appendSources(sources) {
+  if (!sources || !sources.length) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'sources';
+  const seen = new Set();
+  sources.forEach(s => {
+    const label = s.source_file || 'unknown';
+    if (seen.has(label)) return;
+    seen.add(label);
+    const tag = document.createElement('span');
+    tag.className = 'source-tag';
+    tag.textContent = label;
+    wrap.appendChild(tag);
+  });
+  messagesEl.appendChild(wrap);
+}
+
+async function send(customText) {
+  const text = (customText ?? box.value).trim();
+  if (!text) return;
+  box.value = '';
+  sendBtn.disabled = true;
+
+  appendMsg(text, 'user');
+  const thinkingEl = appendMsg('بيدور في قاعدة اللاعبين...', 'bot thinking');
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, session_id: sessionId })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      thinkingEl.remove();
+      appendMsg(err.detail || 'حصل خطأ غير متوقع.', 'error');
+      return;
+    }
+    const data = await res.json();
+    sessionId = data.session_id;
+    thinkingEl.remove();
+    appendMsg(data.answer, 'bot');
+    appendSources(data.sources);
+  } catch (e) {
+    thinkingEl.remove();
+    appendMsg('مقدرتش أوصل للسيرفر. تأكد إنه شغال.', 'error');
+  } finally {
+    sendBtn.disabled = false;
+    box.focus();
+  }
+}
+
+sendBtn.addEventListener('click', () => send());
+box.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') send();
+});
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => send(chip.dataset.q));
+});
+
+resetBtn.addEventListener('click', async () => {
+  if (sessionId) {
+    await fetch('/api/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId })
+    }).catch(() => {});
+  }
+  sessionId = null;
+  messagesEl.innerHTML = '';
+  intro.style.display = 'block';
+  box.focus();
+});
+</script>
+</body>
+</html>

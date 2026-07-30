@@ -1,0 +1,33 @@
+# Environment variables (فيه مفتاح Groq - ممنوع يترفع)
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Vector store (بيتولد أوتوماتيك من data_preparation.py، مش لازم يترفع)
+data/vector_store/
+data/text_files/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
