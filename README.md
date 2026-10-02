@@ -1,78 +1,75 @@
-# SpotMe RAG
+# SpotMe RAG Chatbot
 
-نسخة من SpotMe مبنية **بنفس هيكل worldcubChatbot بالظبط**: بيانات → chunks → embeddings
-(SentenceTransformer) → ChromaDB → retrieval بالـ cosine similarity → LLM (Groq بدل
-Gemini) يجاوب من الـ context بس، من غير أي function calling.
+A RAG-based chatbot for SpotMe player data: SentenceTransformer embeddings + ChromaDB retrieval + LLM (Groq/Gemini) with function calling.
 
-## الهيكل
+## Overview
 
+This project implements a retrieval-augmented generation pipeline over SpotMe player data. Documents are chunked, embedded with SentenceTransformer, stored in ChromaDB, and retrieved via cosine similarity. The LLM (Groq or Gemini) then generates an answer grounded in the retrieved context, with function calling support. A simple RTL HTML frontend is included.
+
+## Features
+
+- Document chunking and embedding pipeline
+- ChromaDB vector store
+- Cosine-similarity retrieval
+- LLM answer generation (Groq / Gemini) with function calling
+- Session history in the chatbot orchestrator
+- Simple HTML frontend
+
+## Architecture
+
+```text
+Documents → Chunks → Embeddings (SentenceTransformer) → ChromaDB
+                                                         ↓
+User query → Embedding → Retrieval (cosine) → Context → LLM → Response
 ```
-SpotMeRAG/
+
+## Tech Stack
+
+- Python
+- FastAPI
+- SentenceTransformers
+- ChromaDB
+- Groq / Gemini (LLM)
+
+## Project Structure
+
+```text
+ChatBot_SBS_/
 ├── backend/
-│   ├── embeddedmanger.py     # EmbeddingManager (SentenceTransformer)
-│   ├── vectorstore.py        # VectorStore (ChromaDB wrapper)
-│   ├── RAG.py                # RAGRetriever (بحث بالـ cosine similarity)
-│   ├── llm.py                # GroqLLM (RAG-style، بدون tools)
-│   └── spotmechatbot.py      # SpotMeChatbot (orchestrator + session history)
-├── data/
-│   ├── players.json          # نفس بيانات اللاعبين الأصلية
-│   ├── text_files/           # يتولد تلقائي: كل رياضة => ملف .txt
-│   └── vector_store/         # يتولد تلقائي: قاعدة ChromaDB
-├── frontend/
-│   └── index.html            # واجهة شات بسيطة (RTL)
-├── data_preparation.py       # يحول players.json -> نصوص -> embeddings -> Chroma
-├── main.py                   # FastAPI app (health / chat / reset)
+│   ├── embeddedmanger.py   # EmbeddingManager (SentenceTransformer)
+│   ├── vectorstore.py      # VectorStore (ChromaDB wrapper)
+│   ├── RAG.py              # RAGRetriever
+│   ├── llm.py              # GroqLLM (tools)
+│   └── spotmechatbot.py    # SpotMeChatbot (orchestrator + session history)
+├── frontend/index.html
+├── data/players.json
+├── data_preparation.py     # players.json → chunks → embeddings → Chroma
+├── main.py                 # FastAPI app (health / chat / reset)
 ├── requirements.txt
 └── .env.example
 ```
 
-## إزاي تشغله
+## Installation
 
 ```bash
+git clone https://github.com/ahmedyasser1588/ChatBot_SBS_.git
+cd ChatBot_SBS_
 pip install -r requirements.txt
-cp .env.example .env        # وحط مفتاح GROQ_API_KEY بتاعك جواه
-
-python data_preparation.py  # يبني الـ vector store مرة واحدة بس
-python main.py               # أو: uvicorn main:app --reload
+cp .env.example .env   # add GROQ_API_KEY
+python data_preparation.py
+python main.py          # or: uvicorn main:app --reload
 ```
 
-هيشتغل على `http://localhost:8000`.
+## Usage
 
-## الفرق الجوهري عن SpotMe الأصلي (app.py) — اقرأ ده كويس
+Open `http://localhost:8000` after starting the app.
 
-الأصل كان مبني على **function calling**: الموديل بيستدعي functions حقيقية
-(`query_players`, `compare_players`, `recommend_players`, `aggregate_players`...)
-بتشتغل على الـ JSON مباشرة بمنطق Python دقيق 100%. ده معناه لما حد يسأل
-"لاعبين عمرهم أقل من 20 سنة في الأهلي"، كان فيه فلتر برمجي فعلي بيرجع إجابة مضبوطة.
+## Project Status
 
-النسخة دي (RAG) بقت شغالة إزاي بالظبط:
+Experimental — a RAG pipeline prototype.
 
-1. كل لاعب اتحول لفقرة نصية عادية (اسم، سن، نادي، ai_score... إلخ في جملة واحدة).
-2. كل فقرة اتحولت لـ embedding وخُزنت في ChromaDB.
-3. أي سؤال بييجي، بياخد embedding ليه، ويدور على أقرب 5 لاعبين بالتشابه الدلالي
-   (semantic similarity)، مش بفلترة حقيقية.
-4. اللي يترجع من نتايج ده بيتحط كـ "context" ويتبعت للـ LLM (Groq) يلخصه ويجاوب منه.
+## Future Improvements
 
-### يعني إيه ده عملياً؟
-
-| النوع | مثال سؤال | هيشتغل كويس؟ |
-|---|---|---|
-| بحث دلالي/وصفي | "لاعب سريع في كرة القدم" | ✅ كويس، embeddings بتفهم المعنى |
-| بحث باسم لاعب معروف | "احكيلي عن Ali Khaled" | ✅ كويس عادةً |
-| فلترة رقمية دقيقة | "لاعبين عمرهم أقل من 20 بالظبط" | ⚠️ مش مضمون — ممكن يرجع لاعبين قريبين مش مطابقين تمامًا |
-| ترتيب/Top-N دقيق | "أفضل 3 لاعبين بالظبط حسب ai_score" | ⚠️ ضعيف — الـ retrieval بيرجع أقرب دلالياً مش أعلى رقمياً |
-| مقارنة بين لاعبين محددين | "قارن بين X و Y" | ⚠️ ممكن الاتنين ميظهروش في نفس الـ top-5 |
-| تجميع/إحصائيات (متوسط، عدد) | "متوسط عمر لاعبين الزمالك" | ❌ مش هيشتغل خالص، محتاج حساب فعلي مش استرجاع نصوص |
-
-**خلاصة:** المقايضة اللي اتفقنا عليها هي إنك كسبت نفس معمارية worldcubChatbot
-(أبسط، أسهل تفهمها وتشرحها، RAG classic)، وخسرت الدقة الرقمية اللي كانت في الأصل.
-لو حبيت ترجع جزء من الدقة، الحل المتوسط (اللي مقترحه سابقاً) هو تسيب الأسئلة
-الرقمية/التجميعية تستخدم دوال Python حقيقية زي الأصل، وتسيب RAG بس للأسئلة
-الوصفية/العامة (زي "احكيلي عن فلسفة الكشف عن المواهب" أو أسئلة مفتوحة).
-
-## تحسين ممكن مستقبلاً
-
-- لو حبيت تحسن الدقة شوية من غير ما ترجع لـ function calling بالكامل: زود
-  `top_k` في `RAG.py` (حالياً 5) لما السؤال يبان إنه محتاج مقارنة بين أكتر من لاعب.
-- الموديل المستخدم `paraphrase-multilingual-MiniLM-L12-v2` بديل عن الأصلي
-  `all-MiniLM-L6-v2` لأن بياناتنا فيها عربي (أسماء أندية ومراكز).
+- Add evaluation of retrieval quality
+- Add tests
+- Containerize with Docker
